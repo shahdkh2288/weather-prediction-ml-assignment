@@ -5,7 +5,7 @@ This repository contains the implementation of **Assignment 2** for the Machine 
 
 The deliverable is a single Python script containing all tasks, from preprocessing the dataset to implementing machine learning algorithms and evaluating their performance.
 
----
+
 
 ## Features
 - **Data Preprocessing**
@@ -20,7 +20,7 @@ The deliverable is a single Python script containing all tasks, from preprocessi
 - **Visualization**
   - Decision Tree visualization with explanations.
 
----
+
 
 ## Team Members
 - Member 1: Shahd Khaled Ahmed
@@ -29,7 +29,7 @@ The deliverable is a single Python script containing all tasks, from preprocessi
 - Member 4: Aliaa Adel
 - Member 5: Abdelmonem Tarek
 
----
+
 
 ## Requirements
 - Python 3.8+
