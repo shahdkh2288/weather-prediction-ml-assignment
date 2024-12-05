@@ -16,27 +16,32 @@ def check_missing_data(df):
     print("Missing Data:\n", missing_data)
     return missing_data
 
+
 def handle_missing_data(df):
     # Option 1: Drop rows with missing values
     df_dropped = df.dropna()
     print("\nData after dropping rows with missing values:\n", df_dropped)
 
-    # Option 2: Fill missing values with the mean
-    df_filled = df.fillna(df.mean())
-    print("\nData after filling missing values with mean:\n", df_filled)
+    # Option 2: Fill missing values with the mean for numeric columns only
+    numeric_cols = df.select_dtypes(include=['number']).columns
+    df_filled = df.copy()
+    df_filled[numeric_cols] = df_filled[numeric_cols].fillna(df_filled[numeric_cols].mean())
+
+    print("\nData after filling missing values with mean (for numeric columns):\n", df_filled)
 
     return df_dropped, df_filled
+
 
 def preprocess_data(df, target_column):
     # Encode target variable
     df[target_column] = df[target_column].map({'no rain': 0, 'rain': 1})
-    
-    # Feature scaling
+
+    # Separate features and target
     features = df.drop(target_column, axis=1)
-    scaler = StandardScaler()
-    features_scaled = scaler.fit_transform(features)
-    
-    return features_scaled, df[target_column], features.columns
+    target = df[target_column]
+
+    return features, target, features.columns
+
 
 def train_decision_tree(X_train, y_train, max_depth=None, random_state=40):
     model = DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
@@ -44,7 +49,43 @@ def train_decision_tree(X_train, y_train, max_depth=None, random_state=40):
     print("Decision Tree Model Trained Successfully")
     return model
 
-# Main flow
+def evaluate_decision_tree(model,X_train , y_train, X_test,y_test):
+    """Evaluate the model using accuracy, precision, and recall."""
+
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+
+    # 3 Metrics for Training Data
+
+    print("\nTraining Performance:")
+    print(f"Accuracy: {accuracy_score(y_train, y_train_pred):.2f}")
+    print(f"Precision: {precision_score(y_train, y_train_pred):.2f}")
+    print(f"Recall: {recall_score(y_train, y_train_pred):.2f}")
+
+    # 3 Metrics for Testing Data
+
+    print("\nTesting Performance:")
+    print(f"Accuracy: {accuracy_score(y_test, y_test_pred):.2f}")
+    print(f"Precision: {precision_score(y_test, y_test_pred):.2f}")
+    print(f"Recall: {recall_score(y_test, y_test_pred):.2f}")
+
+def plot_decision_tree(model, feature_names):
+
+    #visualize decision tree with custom font sizes and color
+
+    plt.figure(figsize=(25, 15))
+    plot_tree(
+        model,
+        feature_names=feature_names,
+        class_names=["No Rain", "Rain"],
+        filled=True,
+        rounded=True,
+        proportion=True,
+        fontsize=14
+    )
+    plt.title("Decision Tree Visualization", fontsize=20, pad=20)
+    plt.show()
+
 if __name__ == "__main__":
     file_path = "weather_forecast_data.csv"  # Update your file path
     target_column = 'Rain'
@@ -64,7 +105,16 @@ if __name__ == "__main__":
     # 5. Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=40)
 
-    # 6. Train Decision Tree
+    # 6. Scale features
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    # 7. Train Decision Tree
     decision_tree_model = train_decision_tree(X_train, y_train)
 
-    
+    # 8. Evaluate decision tree model
+    evaluate_decision_tree(decision_tree_model, X_train, y_train, X_test, y_test)
+
+    # 9. plot the Decision Tree
+    plot_decision_tree(decision_tree_model, feature_names)
