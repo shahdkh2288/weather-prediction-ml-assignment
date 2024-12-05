@@ -5,6 +5,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 import matplotlib.pyplot as plt
 from sklearn.naive_bayes import GaussianNB
+from math import sqrt
+from sklearn.neighbors import KNeighborsClassifier
+
 
 def load_data(file_path):
     # Load the dataset
@@ -43,6 +46,7 @@ def preprocess_data(df, target_column):
 
     return features, target, features.columns
 
+#--------------------------------------------------------------
 
 def train_decision_tree(X_train, y_train, max_depth=None, random_state=40):
     model = DecisionTreeClassifier(max_depth=max_depth, random_state=random_state)
@@ -76,6 +80,8 @@ def plot_decision_tree(model, feature_names):
     plt.title("Decision Tree Visualization", fontsize=20, pad=20)
     plt.show()
 
+#--------------------------------------------------------------
+
 def train_naive_bayes(X_train, y_train):
     model = GaussianNB()
     model.fit(X_train, y_train)
@@ -91,6 +97,89 @@ def evaluate_naive_bayes(model, X_test, y_test):
     print("Precision: ", precision)
     print("Recall: ", recall)
     return accuracy, precision, recall
+
+#--------------------------------------------------------------
+# KNN From Scratch
+# First I calculate distance between test and each point
+
+def Distance_Calculation(MyFirstRow, OtherRow):
+    MydDis = 0.0
+    for j in range(len(MyFirstRow)):
+        MydDis += (MyFirstRow[j] - OtherRow[j]) ** 2
+    return sqrt(MydDis)
+
+
+# then finding k nearist neighbour
+def Kowing_neighbors(X_train, y_train, test_row, num_neighbors):
+    distances = []
+    for i, train_row in enumerate(X_train):
+        dist = Distance_Calculation(test_row, train_row)
+        distances.append((i, dist))  # put in list of distances the index and dist of the train row
+    distances.sort(key=lambda q: q[1])
+    neighbors = []
+    for indx, dis in distances[:num_neighbors]:
+        neighbors.append(y_train.iloc[indx])  # then here see the index and put in neighbours the referring Y Train
+    return neighbors
+
+
+# then Implement my predict for it
+def PredictValues(X_train, y_train, test_row, num_neighbors):
+    neighbors = Kowing_neighbors(X_train, y_train, test_row, num_neighbors)
+    prediction = max(set(neighbors), key=neighbors.count)
+    return prediction
+
+
+# Evaluate kNN from scratch
+def knn_from_scratch(X_train, y_train, X_test, y_test, valuesOfK):
+    scratch = {}
+    print("\nkNN from Scratch Results:")
+    for k in valuesOfK:
+        Res_YPredicat = []
+        for test_row in X_test:
+            Res_YPredicat.append(PredictValues(X_train, y_train, test_row, k))
+        acc = accuracy_score(y_test, Res_YPredicat)
+        prec = precision_score(y_test, Res_YPredicat, average="weighted", zero_division=1)
+        rec = recall_score(y_test, Res_YPredicat, average="weighted", zero_division=1)
+        print(f"k = {k}: Accuracy = {acc:.2f}, Precision = {prec:.2f}, Recall = {rec:.2f}")
+        scratch[k] = (acc, prec, rec)
+    return scratch
+
+#________________________________________________
+
+# KNN using sklearn
+def knn_Using_Sklearn(X_train, y_train, X_test, y_test, valuesOfK):
+    sklearn = {}
+    print("\nkNN using scikit-learn Results:")
+    for k in valuesOfK:     # implement algo for each k
+      KNN_Algo = KNeighborsClassifier(n_neighbors = k)
+      KNN_Algo.fit(X_train, y_train)
+
+      Res_YPredicat = KNN_Algo.predict(X_test)
+
+      acc = accuracy_score(y_test, Res_YPredicat)
+      prec = precision_score(y_test, Res_YPredicat, average="weighted", zero_division=1)
+      rec = recall_score(y_test, Res_YPredicat, average="weighted", zero_division=1)
+
+      print(f"k = {k}: Accuracy = {acc:.2f}, Precision = {prec:.2f}, Recall = {rec:.2f}")
+      sklearn[k] = (acc, prec, rec)
+    return sklearn
+#-----------------------------------------------------------
+#comparing KNN from scratch with KNN(scikit-learn)
+def compare_knn_ForBoth(scratch, sklearn):
+    print("\nComparison of kNN (Scratch vs. sklearn):")
+    for k in scratch:
+        scratch_acc, scratch_prec, scratch_rec = scratch[k]
+        sklearn_acc, sklearn_prec, sklearn_rec = sklearn[k]
+
+        # Compute the difference for each metric
+        acc_diff = scratch_acc - sklearn_acc
+        prec_diff = scratch_prec - sklearn_prec
+        rec_diff = scratch_rec - sklearn_rec
+
+        print(f"k = {k}:")
+        print(f"  Accuracy Difference = {acc_diff:.2f}")
+        print(f"  Precision Difference = {prec_diff:.2f}")
+        print(f"  Recall Difference = {rec_diff:.2f}")
 
 
 if __name__ == "__main__":
@@ -124,6 +213,17 @@ if __name__ == "__main__":
     #evaluate naive bayes model
     naive_bayes_model_dropped = train_naive_bayes(X_train_scaled_dropped, y_train_dropped)
     evaluate_naive_bayes(naive_bayes_model_dropped, X_test_scaled_dropped, y_test_dropped)
+    print("\n")
+
+    # KNN from scratch
+    k_values = [3, 5, 7, 9, 11]
+    KNN_from_scratch_model_dropped = knn_from_scratch(X_train_scaled_dropped,y_train_dropped,X_test_scaled_dropped,y_test_dropped,k_values)
+
+    #KNN using scikit-learn
+    KNN_using_scikitLearn_dropped = knn_Using_Sklearn(X_train_scaled_dropped,y_train_dropped,X_test_scaled_dropped,y_test_dropped,k_values)
+
+    #comparing KNN from scratch with KNN using scikit
+    compare_knn_ForBoth(KNN_from_scratch_model_dropped,KNN_using_scikitLearn_dropped)
 
 
     #Case 2: Using data after filling missing values with the mean
@@ -145,3 +245,10 @@ if __name__ == "__main__":
     # evaluate naive bayes model
     naive_bayes_model_filled = train_naive_bayes(X_train_scaled_filled, y_train_filled)
     evaluate_naive_bayes(naive_bayes_model_filled, X_test_scaled_filled,y_test_filled)
+    print("\n")
+
+    #KNN using scikit-learn filled
+    KNN_using_scikitLearn_filled = knn_Using_Sklearn(X_train_scaled_filled,y_train_filled,X_test_scaled_filled,y_test_filled,k_values)
+
+
+
