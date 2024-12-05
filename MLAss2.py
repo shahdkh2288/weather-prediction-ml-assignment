@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -22,7 +23,7 @@ def handle_missing_data(df):
     print("\nData after dropping rows with missing values:\n", df_dropped)
 
     # Option 2: Fill missing values with the mean
-    df_filled = df.fillna(df.mean())
+    df_filled = df.fillna(df.drop('Rain', axis=1).mean())
     print("\nData after filling missing values with mean:\n", df_filled)
 
     return df_dropped, df_filled
@@ -43,6 +44,24 @@ def train_decision_tree(X_train, y_train, max_depth=None, random_state=40):
     model.fit(X_train, y_train)
     print("Decision Tree Model Trained Successfully")
     return model
+
+def train_naive_bayes(X_train, y_train):
+    model = GaussianNB()
+    model.fit(X_train, y_train)
+    print("Naive Bayes Model Trained Successfully")
+    return model
+
+def evaluate_model(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    print("Accuracy: ", accuracy)
+    print("Precision: ", precision)
+    print("Recall: ", recall)
+
+    return accuracy, precision, recall
+
 
 # Main flow
 if __name__ == "__main__":
@@ -67,4 +86,13 @@ if __name__ == "__main__":
     # 6. Train Decision Tree
     decision_tree_model = train_decision_tree(X_train, y_train)
 
-    
+    # 7. Evaluate Decision Tree
+    print("\nDecision Tree Model Evaluation:")
+    evaluate_model(decision_tree_model, X_test, y_test)
+
+    # 8. Train Naive Bayes
+    naive_bayes_model = train_naive_bayes(X_train, y_train)
+
+    # 9. Evaluate Naive Bayes
+    print("\nNaive Bayes Model Evaluation:")
+    evaluate_model(naive_bayes_model, X_test, y_test)
