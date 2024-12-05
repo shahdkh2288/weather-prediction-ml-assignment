@@ -4,6 +4,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 import matplotlib.pyplot as plt
+from sklearn.naive_bayes import GaussianNB
 
 def load_data(file_path):
     # Load the dataset
@@ -49,7 +50,7 @@ def train_decision_tree(X_train, y_train, max_depth=None, random_state=40):
     print("Decision Tree Model Trained Successfully")
     return model
 
-def evaluate_decision_tree(model,X_train , y_train, X_test,y_test):
+def evaluate_decision_tree(model, X_test,y_test):
     """Evaluate the model using accuracy, precision, and recall."""
     y_test_pred = model.predict(X_test)
 
@@ -75,6 +76,23 @@ def plot_decision_tree(model, feature_names):
     plt.title("Decision Tree Visualization", fontsize=20, pad=20)
     plt.show()
 
+def train_naive_bayes(X_train, y_train):
+    model = GaussianNB()
+    model.fit(X_train, y_train)
+    print("Naive Bayes Model Trained Successfully")
+    return model
+
+def evaluate_naive_bayes(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    print("Accuracy: ", accuracy)
+    print("Precision: ", precision)
+    print("Recall: ", recall)
+    return accuracy, precision, recall
+
+
 if __name__ == "__main__":
     file_path = "weather_forecast_data.csv"  # Update your file path
     target_column = 'Rain'
@@ -89,27 +107,27 @@ if __name__ == "__main__":
     df_dropped, df_filled = handle_missing_data(df)
 
     #Case 1: Using data after dropping rows with missing values
-    print("\nEvaluating model with dropping rows with missing value option: ")
+    print("\nEvaluating models > knn,Naive bayes, decision tree with dropping rows with missing value option: \n")
     X_dropped, y_dropped, feature_names = preprocess_data(df_dropped, target_column)
     X_train_dropped, X_test_dropped, y_train_dropped, y_test_dropped = train_test_split(X_dropped, y_dropped,
                                                                                         test_size=0.2, random_state=40)
-
     # Scale features
     scaler = StandardScaler()
     X_train_scaled_dropped = scaler.fit_transform(X_train_dropped)
     X_test_scaled_dropped = scaler.transform(X_test_dropped)
 
-
+    #evaluate and plot decision tree model
     decision_tree_model_dropped = train_decision_tree(X_train_scaled_dropped, y_train_dropped)
-
-    evaluate_decision_tree(decision_tree_model_dropped, X_train_scaled_dropped, y_train_dropped, X_test_scaled_dropped,
-                           y_test_dropped)
-
-    # Plot the Decision Tree
+    evaluate_decision_tree(decision_tree_model_dropped, X_test_scaled_dropped,y_test_dropped)
     plot_decision_tree(decision_tree_model_dropped, feature_names)
+    print("\n")
+    #evaluate naive bayes model
+    naive_bayes_model_dropped = train_naive_bayes(X_train_scaled_dropped, y_train_dropped)
+    evaluate_naive_bayes(naive_bayes_model_dropped, X_test_scaled_dropped, y_test_dropped)
+
 
     #Case 2: Using data after filling missing values with the mean
-    print("\nEvaluating model with filled missing values with mean option :")
+    print("\nEvaluating models > knn,Naive bayes, decision tree with filled missing values with mean option :\n")
     X_filled, y_filled, feature_names = preprocess_data(df_filled, target_column)
     X_train_filled, X_test_filled, y_train_filled, y_test_filled = train_test_split(X_filled, y_filled, test_size=0.2,
                                                                                     random_state=40)
@@ -118,11 +136,12 @@ if __name__ == "__main__":
     X_train_scaled_filled = scaler.fit_transform(X_train_filled)
     X_test_scaled_filled = scaler.transform(X_test_filled)
 
-
+    # evaluate and plot decision tree model
     decision_tree_model_filled = train_decision_tree(X_train_scaled_filled, y_train_filled)
-
-    evaluate_decision_tree(decision_tree_model_filled, X_train_scaled_filled, y_train_filled, X_test_scaled_filled,
-                           y_test_filled)
-
-    # Plot the Decision Tree
+    evaluate_decision_tree(decision_tree_model_filled, X_test_scaled_filled,y_test_filled)
     plot_decision_tree(decision_tree_model_filled, feature_names)
+
+    print("\n")
+    # evaluate naive bayes model
+    naive_bayes_model_filled = train_naive_bayes(X_train_scaled_filled, y_train_filled)
+    evaluate_naive_bayes(naive_bayes_model_filled, X_test_scaled_filled,y_test_filled)
