@@ -51,19 +51,9 @@ def train_decision_tree(X_train, y_train, max_depth=None, random_state=40):
 
 def evaluate_decision_tree(model,X_train , y_train, X_test,y_test):
     """Evaluate the model using accuracy, precision, and recall."""
-
-    y_train_pred = model.predict(X_train)
     y_test_pred = model.predict(X_test)
 
-    # 3 Metrics for Training Data
-
-    print("\nTraining Performance:")
-    print(f"Accuracy: {accuracy_score(y_train, y_train_pred):.2f}")
-    print(f"Precision: {precision_score(y_train, y_train_pred):.2f}")
-    print(f"Recall: {recall_score(y_train, y_train_pred):.2f}")
-
     # 3 Metrics for Testing Data
-
     print("\nTesting Performance:")
     print(f"Accuracy: {accuracy_score(y_test, y_test_pred):.2f}")
     print(f"Precision: {precision_score(y_test, y_test_pred):.2f}")
@@ -72,7 +62,6 @@ def evaluate_decision_tree(model,X_train , y_train, X_test,y_test):
 def plot_decision_tree(model, feature_names):
 
     #visualize decision tree with custom font sizes and color
-
     plt.figure(figsize=(25, 15))
     plot_tree(
         model,
@@ -99,22 +88,41 @@ if __name__ == "__main__":
     # 3. Handle missing data
     df_dropped, df_filled = handle_missing_data(df)
 
-    # 4. Use the filled data for further processing
-    X, y, feature_names = preprocess_data(df_filled, target_column)
+    #Case 1: Using data after dropping rows with missing values
+    print("\nEvaluating model with dropping rows with missing value option: ")
+    X_dropped, y_dropped, feature_names = preprocess_data(df_dropped, target_column)
+    X_train_dropped, X_test_dropped, y_train_dropped, y_test_dropped = train_test_split(X_dropped, y_dropped,
+                                                                                        test_size=0.2, random_state=40)
 
-    # 5. Split data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=40)
-
-    # 6. Scale features
+    # Scale features
     scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    X_train_scaled_dropped = scaler.fit_transform(X_train_dropped)
+    X_test_scaled_dropped = scaler.transform(X_test_dropped)
 
-    # 7. Train Decision Tree
-    decision_tree_model = train_decision_tree(X_train, y_train)
 
-    # 8. Evaluate decision tree model
-    evaluate_decision_tree(decision_tree_model, X_train, y_train, X_test, y_test)
+    decision_tree_model_dropped = train_decision_tree(X_train_scaled_dropped, y_train_dropped)
 
-    # 9. plot the Decision Tree
-    plot_decision_tree(decision_tree_model, feature_names)
+    evaluate_decision_tree(decision_tree_model_dropped, X_train_scaled_dropped, y_train_dropped, X_test_scaled_dropped,
+                           y_test_dropped)
+
+    # Plot the Decision Tree
+    plot_decision_tree(decision_tree_model_dropped, feature_names)
+
+    #Case 2: Using data after filling missing values with the mean
+    print("\nEvaluating model with filled missing values with mean option :")
+    X_filled, y_filled, feature_names = preprocess_data(df_filled, target_column)
+    X_train_filled, X_test_filled, y_train_filled, y_test_filled = train_test_split(X_filled, y_filled, test_size=0.2,
+                                                                                    random_state=40)
+
+    # Scale features
+    X_train_scaled_filled = scaler.fit_transform(X_train_filled)
+    X_test_scaled_filled = scaler.transform(X_test_filled)
+
+
+    decision_tree_model_filled = train_decision_tree(X_train_scaled_filled, y_train_filled)
+
+    evaluate_decision_tree(decision_tree_model_filled, X_train_scaled_filled, y_train_filled, X_test_scaled_filled,
+                           y_test_filled)
+
+    # Plot the Decision Tree
+    plot_decision_tree(decision_tree_model_filled, feature_names)
