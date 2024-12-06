@@ -183,7 +183,7 @@ def compare_knn_ForBoth(scratch, sklearn):
 
 
 if __name__ == "__main__":
-    file_path = "weather_forecast_data.csv"  # Update your file path
+    file_path = "weather_forecast_data.csv"
     target_column = 'Rain'
 
     # 1. Load data
